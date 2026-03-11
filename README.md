@@ -2,7 +2,7 @@
 
 # The Productivity Engine
 
-This project brings together a set of n8n workflows designed to automate daily tasks, perform professional monitoring, and integrate artificial intelligence into instant messaging services.s
+This project brings together a set of n8n workflows designed to automate daily tasks, perform professional monitoring, and integrate artificial intelligence into instant messaging services.
 
 ## Prerequist
 
