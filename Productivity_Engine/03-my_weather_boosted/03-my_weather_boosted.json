@@ -1,0 +1,240 @@
+{
+  "name": "03-my_weather_boosted",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [0, -16],
+      "id": "ba957490-037e-4a94-ae77-029ca9724f14",
+      "name": "Telegram Trigger",
+      "webhookId": "b030611b-30f8-45f0-a727-faa3884ee0d0",
+      "credentials": {
+        "telegramApi": {
+          "id": "nZ8jHPK6EkGcDzxM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Extract from the phrase, only the city; otherwise, send: Invalid message, please send a city name."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [224, -16],
+      "id": "dbd8bc95-ee9d-403e-8203-e29f1985a0a6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [232, 208],
+      "id": "fbb68af4-3b27-4895-a4e1-83d10d5d3844",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2JLj0nkqreSHO4kx",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.text }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [360, 208],
+      "id": "16524ddb-a330-4389-8540-dcacd29164df",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Invalid message, please send a city name.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [800, -112],
+      "id": "90de2f1a-bcbf-4195-8b50-899392d51ea9",
+      "name": "Send a error of incorrect text",
+      "webhookId": "e8561c50-755b-4d48-a15c-9f602183c45a",
+      "credentials": {
+        "telegramApi": {
+          "id": "nZ8jHPK6EkGcDzxM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=Température: {{ $json.main.temp }} C°\nSensation: {{ $json.main.feels_like }} C°\n---------------------------\nTemp-min: {{ $json.main.temp_min }} C°\nTemp-max: {{ $json.main.temp_max }} C°\n---------------------------\nPréssion: {{ $json.main.pressure }} mbar\nHumidité: {{ $json.main.humidity }} %\nVitesse-vent: {{ $json.wind.speed }} km/h\nDescription-temps: {{ $json.weather[0].description }}\n---------------------------\nPays: {{ $json.sys.country }}\nVille: {{ $json.name }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1024, 80],
+      "id": "c7041aa0-4f55-4fa2-a755-a229b02ecedc",
+      "name": "Send the city weather",
+      "webhookId": "9be3aa3f-57e6-4e4d-a133-48e3dd728efa",
+      "credentials": {
+        "telegramApi": {
+          "id": "nZ8jHPK6EkGcDzxM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e0ca4c0e-3232-4722-8380-2e37f4dde72d",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "Invalid message, please send a city name.",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [576, -16],
+      "id": "4a889713-3e03-4a87-b6d1-8489222a7cbb",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "cityName": "={{ $json.output }}",
+        "language": "en"
+      },
+      "type": "n8n-nodes-base.openWeatherMap",
+      "typeVersion": 1,
+      "position": [800, 80],
+      "id": "b37649b2-8c49-44b9-8147-2ded543fae3b",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "zwmp7O7JTzspXbFK",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a error of incorrect text": {
+      "main": [[]]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a error of incorrect text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenWeatherMap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "main": [
+        [
+          {
+            "node": "Send the city weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5bca4339-40ef-45f4-a6e2-b6e74bd783db",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e70e688a5548cb3771c1296b73d5113f27ebb9ad3766208c36af253edb207c36"
+  },
+  "id": "vSd2QuT5TOtwpxAr",
+  "tags": []
+}

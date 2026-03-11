@@ -1,0 +1,264 @@
+{
+  "name": "06-my_job_alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -432,
+        144
+      ],
+      "id": "42c0b10f-85d6-48d0-9488-42b40a483f45",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyAMfXLGagT9SXFmUlyYFcGKpKQJSnRDgbc"
+            },
+            {
+              "name": "cx",
+              "value": "a5711452c554249fc"
+            },
+            {
+              "name": "q",
+              "value": "alternance informatique site:linkedin.com/jobs"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "start",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -208,
+        144
+      ],
+      "id": "772af839-bcc5-46e7-a85c-2921c358ea96",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.items"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        144
+      ],
+      "id": "3bb3c8e7-4ca0-4605-bee9-41f0220de6ec",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fda687e0-25c7-4b33-b690-17c1ecf70495",
+              "leftValue": "={{ $itemIndex }}",
+              "operator": {
+                "type": "number",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        144
+      ],
+      "id": "05036d4a-7192-4fc7-9dd7-c8aa0fc83596",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "emailSubject",
+              "value": "=Alerte - {{ $json.title }}.",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "emailBody",
+              "value": "=<html><body><h2>Nouvelles opportunités d'alternance</h2><p>{{ $json.title }}. Offres:</p><ul>{{ $json.htmlFormattedUrl }}</ul></body></html>",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "discordMessage",
+              "value": "=**Nouvelle offre d'emploi !**\n\n{{ $json.title }}:\n\n{{ $json.htmlFormattedUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7d8b53c2-3237-4d4f-8c57-c790e6f215b5",
+      "name": "Format Notification Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "reeegzi12@gmail.com",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "id": "2a5a1e6d-8bc8-4c8f-9da1-33c5563d4725",
+      "name": "Send Gmail Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        688,
+        48
+      ],
+      "webhookId": "b8236366-0d87-4fb7-82ac-7deb18494b9a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K5Z0bCeC6cD3pw2M",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ $json.discordMessage }}",
+        "options": {}
+      },
+      "id": "6c2bdd4b-2f69-4d27-8a23-d58419578f41",
+      "name": "Send Discord Notification",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        688,
+        240
+      ],
+      "webhookId": "aa2730f8-ee5f-462f-910c-f1a4e7c47dfb",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "wlrWD57pb6BqJpRK",
+          "name": "Discord Webhook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Notification Message": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Discord Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Format Notification Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1af784e9-c73e-4a54-9de6-7bcff39f2ebf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e70e688a5548cb3771c1296b73d5113f27ebb9ad3766208c36af253edb207c36"
+  },
+  "id": "hkMScH1sJLoKoRBM",
+  "tags": []
+}

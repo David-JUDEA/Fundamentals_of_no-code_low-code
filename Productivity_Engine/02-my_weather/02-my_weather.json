@@ -1,0 +1,122 @@
+{
+  "name": "02-my_weather",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [0, -96],
+      "id": "742c255f-af09-4627-9162-84a5b432b1b8",
+      "name": "Telegram Trigger",
+      "webhookId": "79671240-52a0-4b0a-87bf-2baebcbf71e7",
+      "credentials": {
+        "telegramApi": {
+          "id": "nZ8jHPK6EkGcDzxM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "cityName": "={{ $json.message.text }}"
+      },
+      "type": "n8n-nodes-base.openWeatherMap",
+      "typeVersion": 1,
+      "position": [224, -96],
+      "id": "ff939a66-3ebc-4031-9be6-8256372a7748",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "zwmp7O7JTzspXbFK",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=Température: {{ $json.main.temp }} C°\nSensation: {{ $json.main.feels_like }} C°\n---------------------------\nTemp-min: {{ $json.main.temp_min }} C°\nTemp-max: {{ $json.main.temp_max }} C°\n---------------------------\nPréssion: {{ $json.main.pressure }} mbar\nHumidité: {{ $json.main.humidity }} %\nVitesse-vent: {{ $json.wind.speed }} km/h\nDescription-temps: {{ $json.weather[0].description }}\n---------------------------\nPays: {{ $json.sys.country }}\nVille: {{ $json.name }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [448, 0],
+      "id": "f39cca02-7a68-4f1d-99a7-66cfbe5a5c9f",
+      "name": "Send a text message",
+      "webhookId": "72705efe-6279-48fe-ac40-e99c629969ec",
+      "credentials": {
+        "telegramApi": {
+          "id": "nZ8jHPK6EkGcDzxM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAnimation",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "file": "https://cdn-icons-gif.flaticon.com/14822/14822094.gif",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [448, -192],
+      "id": "b9259be7-c8ff-4660-a65f-6ca38ee3da9a",
+      "name": "Send an animated file",
+      "webhookId": "1acb2ddf-530b-4db0-b609-b165080e8359",
+      "credentials": {
+        "telegramApi": {
+          "id": "nZ8jHPK6EkGcDzxM",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "OpenWeatherMap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "main": [
+        [
+          {
+            "node": "Send an animated file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an animated file": {
+      "main": [[]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2222b59a-44ae-44e8-a5e7-89b62a5cd425",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e70e688a5548cb3771c1296b73d5113f27ebb9ad3766208c36af253edb207c36"
+  },
+  "id": "i8TruXkpX19uBief",
+  "tags": []
+}
